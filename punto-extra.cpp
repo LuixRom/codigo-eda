@@ -87,6 +87,28 @@ struct SparseTableIdx{
     }
 }
 
+struct UnionFind {
+    vector<int> padre, rango;
+
+    UnionFind(int n) : padre(n+1), rango(n+1, 0) {
+        for (int i = 0; i <= n; i++) padre[i] = i;
+    }
+
+    int hallarRaiz(int x) {
+        if (padre[x] != x) padre[x] = hallarRaiz(padre[x]);
+        return padre[x];
+    }
+
+    bool unir(int x, int y) {
+        int rx = hallarRaiz(x), ry = hallarRaiz(y);
+        if (rx == ry) return false;
+        if (rango[rx] < rango[ry]) swap(rx, ry);
+        padre[ry] = rx;
+        if (rango[rx] == rango[ry]) rango[rx]++;
+        return true;
+    }
+};
+
 
 int main(){
 
