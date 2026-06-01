@@ -110,6 +110,63 @@ struct UnionFind {
 };
 
 
+struct ArbMST {
+    int totalNodos;
+    vector<int> tourNodos;   
+    vector<int> tourProf;     
+    vector<int> tourPeso;     
+    vector<int> primeraVez;   
+
+    SparseTable    rmqMin;    
+    SparseTableMax rmqMax;    
+    SparseTableIdx rmqIdx;    
+
+    ArbMST(int n, vector<vector<pair<int,int>>>& listaAdj)
+        : totalNodos(n), primeraVez(n+1, -1)
+    {
+        tourNodos.reserve(2*n);
+        tourProf.reserve(2*n);
+        tourPeso.reserve(2*n);
+
+        recorrerDFS(1, -1, 0, 0, listaAdj);
+
+        rmqMin = SparseTable(tourProf);
+        rmqMax = SparseTableMax(tourPeso);
+        rmqIdx = SparseTableIdx(tourProf);
+    }
+
+    void recorrerDFS(int nodoActual, int nodoPadre, int profActual, int pesoLlegada,
+                     vector<vector<pair<int,int>>>& listaAdj) {
+        primeraVez[nodoActual] = tourNodos.size();
+        tourNodos.push_back(nodoActual);
+        tourProf.push_back(profActual);
+        tourPeso.push_back(pesoLlegada); 
+
+        for (auto [vecino, costoArista] : listaAdj[nodoActual]) {
+            if (vecino == nodoPadre) continue;
+            recorrerDFS(vecino, nodoActual, profActual + 1, costoArista, listaAdj);
+            tourNodos.push_back(nodoActual);
+            tourProf.push_back(profActual);
+            tourPeso.push_back(0);
+        }
+    }
+
+    int consultarLCA(int u, int v) {
+        int posU = primeraVez[u], posV = primeraVez[v];
+        if (posU > posV) swap(posU, posV);
+        int idx = rmqIdx.queryIdx(posU, posV);
+        return tourNodos[idx];
+    }
+
+    int consultarMaxArista(int u, int v) {
+        int posU = primeraVez[u], posV = primeraVez[v];
+        if (posU > posV) swap(posU, posV);
+        return rmqMax.query(posU, posV);
+    }
+};
+
+
+
 int main(){
 
     ios::sync_with_stdio(false);
