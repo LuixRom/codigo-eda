@@ -18,8 +18,7 @@ struct SparseTable {
             sparse_table.emplace_back(n - (1 << (k-1)) + 1);
             sparse_table[k].resize(n - (1 << k) + 1);
             for (int i = 0; i + (1 << k) - 1 < n; i++) {
-                sparse_table[k][i] = min(sparse_table[k-1][i],
-                                         sparse_table[k-1][i + (1 << (k-1))]);
+                sparse_table[k][i] = min(sparse_table[k-1][i], sparse_table[k-1][i + (1 << (k-1))]);
             }
         }
     }
@@ -45,8 +44,7 @@ struct SparseTableMax {
             tbl.emplace_back(n - (1 << (k-1)) + 1);
             tbl[k].resize(n - (1 << k) + 1);
             for (int i = 0; i + (1 << k) - 1 < n; i++) {
-                tbl[k][i] = max(tbl[k-1][i],
-                                tbl[k-1][i + (1 << (k-1))]);
+                tbl[k][i] = max(tbl[k-1][i],tbl[k-1][i + (1 << (k-1))]);
             }
         }
     }
@@ -57,6 +55,37 @@ struct SparseTableMax {
         return max(tbl[d][l], tbl[d][r - (1 << d) + 1]);
     }
 };
+
+struct SparseTableIdx{
+    vector<vector<int>> tbl;
+    vector<int>* depRef;
+
+    SparseTableIdx() : depRef(nullptr) {}
+
+    SparseTableIdx(vector<int>& dep) : depRef(&dep) {
+        int n = dep.size();
+        tbl.assign(1, vector<int>(n));
+        for (int i = 0; i < n; i++) tbl[0][i] = i;
+
+        for (int k = 1; (1 << k) <= n; k++) {
+            int sz = n - (1 << k) + 1;
+            tbl.push_back(vector<int>(sz));
+            for (int i = 0; i < sz; i++) {
+                int x = tbl[k-1][i];
+                int y = tbl[k-1][i + (1 << (k-1))];
+                tbl[k][i] = ((*depRef)[x] <= (*depRef)[y]) ? x : y;
+            }
+        }
+    }
+
+    int queryIdx(int l, int r) {
+        int length = r - l + 1;
+        int d = 31 - __builtin_clz(length);
+        int x = tbl[d][l];
+        int y = tbl[d][r - (1 << d) + 1];
+        return ((*depRef)[x] <= (*depRef)[y]) ? x : y;
+    }
+}
 
 
 int main(){
